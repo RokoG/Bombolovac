@@ -33,7 +33,7 @@ void postaviMine(vector<vector<char>>& polje, int brojMina) {
 }
 
 bool provjeriUnos(int redak, int stupac) {
-	return redak >= 0 && redak < SIZE&& stupac >= 0 && stupac < SIZE;
+	return redak >= 0 && redak < SIZE && stupac >= 0 && stupac < SIZE;
 }
 
 bool otkrijPolje(vector<vector<char>>& polje, int redak, int stupac) {
