@@ -3,6 +3,7 @@
 #include <cstdlib>
 #include <ctime>
 #include <string>
+#include <random>
 
 using namespace std;
 
@@ -11,19 +12,18 @@ const char HIDDEN = '#';
 const char MINE = '*';
 
 char board[MAX_BOARD_SIZE][MAX_BOARD_SIZE];
-char minefield[MAX_BOARD_SIZE][MAX_BOARD_SIZE];
 bool revealed[MAX_BOARD_SIZE][MAX_BOARD_SIZE];
 bool flagged[MAX_BOARD_SIZE][MAX_BOARD_SIZE];
 int boardSize;
+int numMines;
 
 void initializeBoard()
 {
-    for (int i = 0; i < MAX_BOARD_SIZE; ++i)
+    for (int i = 0; i < boardSize; ++i)
     {
-        for (int j = 0; j < MAX_BOARD_SIZE; ++j)
+        for (int j = 0; j < boardSize; ++j)
         {
             board[i][j] = HIDDEN;
-            minefield[i][j] = '0';
             revealed[i][j] = false;
             flagged[i][j] = false;
         }
@@ -185,6 +185,17 @@ void loadGame(const string& filename)
     cout << "Game loaded successfully." << endl;
 }
 
+void printMenu()
+{
+    cout << "Menu:" << endl;
+    cout << "1. Reveal cell" << endl;
+    cout << "2. Flag cell" << endl;
+    cout << "3. Save game" << endl;
+    cout << "4. Load game" << endl;
+    cout << "5. Exit" << endl;
+    cout << "Enter your choice: ";
+}
+
 int main()
 {
     srand(static_cast<unsigned int>(time(nullptr)));
@@ -208,6 +219,17 @@ int main()
             cout << "Enter your name: ";
             cin.ignore();
             getline(cin, playerName);
+            ofstream playerNameFile("player_name.txt");
+            if (playerNameFile.is_open())
+            {
+                playerNameFile << playerName;
+                playerNameFile.close();
+                cout << "Player name saved successfully." << endl;
+            }
+            else
+            {
+                cout << "Failed to open player name file." << endl;
+            }
 
             cout << "Enter the board size (4 - 10): ";
             cin >> boardSize;
@@ -218,8 +240,11 @@ int main()
                 boardSize = 10;
             }
 
+            cout << "Enter the number of mines: ";
+            cin >> numMines;
+
             initializeBoard();
-            placeMines(10); // Change the number of mines if desired
+            placeMines(numMines);
 
             cout << "New game started. Good luck, " << playerName << "!" << endl;
         }
@@ -243,14 +268,7 @@ int main()
         while (!isGameOver())
         {
             displayBoard();
-
-            cout << "Menu:" << endl;
-            cout << "1. Reveal cell" << endl;
-            cout << "2. Flag cell" << endl;
-            cout << "3. Save game" << endl;
-            cout << "4. Load game" << endl;
-            cout << "5. Exit" << endl;
-            cout << "Enter your choice: ";
+            printMenu();
 
             cin >> choice;
 
@@ -301,3 +319,4 @@ int main()
 
     return 0;
 }
+
