@@ -7,63 +7,63 @@
 
 using namespace std;
 
-const int MAX_BOARD_SIZE = 10;
-const char HIDDEN = '#';
-const char MINE = '*';
+const int MAX_VELICINA_PLOCE = 10;
+const char SKRIVENO = '#';
+const char BOMBA = '*';
 
-char board[MAX_BOARD_SIZE][MAX_BOARD_SIZE];
-bool revealed[MAX_BOARD_SIZE][MAX_BOARD_SIZE];
-bool flagged[MAX_BOARD_SIZE][MAX_BOARD_SIZE];
-int boardSize;
-int numMines;
+char ploca[MAX_VELICINA_PLOCE][MAX_VELICINA_PLOCE];
+bool otkriveno[MAX_VELICINA_PLOCE][MAX_VELICINA_PLOCE];
+bool oznaceno[MAX_VELICINA_PLOCE][MAX_VELICINA_PLOCE];
+int velPloce;
+int brojBombi;
 
-void initializeBoard()
+void inicijalizacijaPloce()
 {
-    for (int i = 0; i < boardSize; ++i)
+    for (int i = 0; i < velPloce; ++i)
     {
-        for (int j = 0; j < boardSize; ++j)
+        for (int j = 0; j < velPloce; ++j)
         {
-            board[i][j] = HIDDEN;
-            revealed[i][j] = false;
-            flagged[i][j] = false;
+            ploca[i][j] = SKRIVENO;
+            otkriveno[i][j] = false;
+            oznaceno[i][j] = false;
         }
     }
 }
 
-void placeMines(int numMines)
+void postaviBombe(int brojBombi)
 {
     int count = 0;
-    while (count < numMines)
+    while (count < brojBombi)
     {
-        int x = rand() % boardSize;
-        int y = rand() % boardSize;
+        int x = rand() % velPloce;
+        int y = rand() % velPloce;
 
-        if (board[x][y] != MINE)
+        if (ploca[x][y] != BOMBA)
         {
-            board[x][y] = MINE;
+            ploca[x][y] = BOMBA;
             ++count;
         }
     }
 }
 
-void displayBoard()
+void prikaziPlocu()
 {
     cout << endl;
-    for (int i = 0; i < boardSize; ++i)
+    for (int i = 0; i < velPloce; ++i)
     {
-        for (int j = 0; j < boardSize; ++j)
+        for (int j = 0; j < velPloce; ++j)
         {
-            if (revealed[i][j])
+            if (otkriveno[i][j])
             {
-                cout << board[i][j] << ' ';
+                cout << ploca[i][j] << ' ';
             }
-            else if (flagged[i][j])
+            else if (oznaceno[i][j])
             {
                 cout << "F ";
             }
             else
             {
-                cout << HIDDEN << ' ';
+                cout << SKRIVENO << ' ';
             }
         }
         cout << endl;
@@ -71,27 +71,45 @@ void displayBoard()
     cout << endl;
 }
 
-bool isValidPosition(int x, int y)
+bool jeDobraPozicija(int x, int y)
 {
-    return (x >= 0 && x < boardSize && y >= 0 && y < boardSize);
+    return (x >= 0 && x < velPloce && y >= 0 && y < velPloce);
 }
 
-void revealCell(int x, int y)
+bool igrajPonovo()
 {
-    if (!isValidPosition(x, y) || revealed[x][y] || flagged[x][y])
+    char izbor;
+    cout << "Zelite li ponovno igrati? (D/N): ";
+    cin >> izbor;
+    return (izbor == 'D' || izbor== 'd');
+}
+
+void otkrijPolje(int x, int y)
+{
+    if (!jeDobraPozicija(x, y) || otkriveno[x][y] || oznaceno[x][y])
     {
         return;
     }
 
-    revealed[x][y] = true;
+     otkriveno[x][y] = true;
 
-    if (board[x][y] == MINE)
+    if (ploca[x][y] == BOMBA)
     {
-        cout << "Game over! You hit a mine." << endl;
-        return;
+        cout << "Kraj igre! Pogodio si bombu." << endl;
+        
+        if (igrajPonovo())
+        {
+            inicijalizacijaPloce();
+            postaviBombe(brojBombi);
+            return;
+        }
+        else
+        {
+            exit(0);
+        }
     }
 
-    int count = 0;
+    int brojac = 0;
     for (int dx = -1; dx <= 1; ++dx)
     {
         for (int dy = -1; dy <= 1; ++dy)
@@ -99,16 +117,16 @@ void revealCell(int x, int y)
             int nx = x + dx;
             int ny = y + dy;
 
-            if (isValidPosition(nx, ny) && board[nx][ny] == MINE)
+            if (jeDobraPozicija(nx, ny) && ploca[nx][ny] == BOMBA)
             {
-                ++count;
+                brojac++;
             }
         }
     }
 
-    if (count > 0)
+    if (brojac > 0)
     {
-        board[x][y] = '0' + count;
+        ploca[x][y] = '0' + brojac;
     }
     else
     {
@@ -119,30 +137,30 @@ void revealCell(int x, int y)
                 int nx = x + dx;
                 int ny = y + dy;
 
-                if (isValidPosition(nx, ny) && !revealed[nx][ny])
+                if (jeDobraPozicija(nx, ny) && !otkriveno[nx][ny])
                 {
-                    revealCell(nx, ny);
+                    otkrijPolje(nx, ny);
                 }
             }
         }
     }
 }
 
-void flagCell(int x, int y)
+void oznaciPolje(int x, int y)
 {
-    if (isValidPosition(x, y))
+    if (jeDobraPozicija(x, y))
     {
-        flagged[x][y] = !flagged[x][y];
+        oznaceno[x][y] = !oznaceno[x][y];
     }
 }
 
-bool isGameOver()
+bool jeIgraGotova()
 {
-    for (int i = 0; i < boardSize; ++i)
+    for (int i = 0; i < velPloce; ++i)
     {
-        for (int j = 0; j < boardSize; ++j)
+        for (int j = 0; j < velPloce; ++j)
         {
-            if (!revealed[i][j] && board[i][j] != MINE)
+            if (!otkriveno[i][j] && ploca[i][j] != BOMBA)
             {
                 return false;
             }
@@ -151,169 +169,186 @@ bool isGameOver()
     return true;
 }
 
-void saveGame(const string& filename)
+void spremiIgru(const string& filename)
 {
     ofstream file(filename, ios::binary);
 
-    file.write(reinterpret_cast<const char*>(&boardSize), sizeof(boardSize));
-    file.write(reinterpret_cast<const char*>(board), sizeof(board));
-    file.write(reinterpret_cast<const char*>(revealed), sizeof(revealed));
-    file.write(reinterpret_cast<const char*>(flagged), sizeof(flagged));
+    file.write(reinterpret_cast<const char*>(&velPloce), sizeof(velPloce));
+    file.write(reinterpret_cast<const char*>(ploca), sizeof(ploca));
+    file.write(reinterpret_cast<const char*>(otkriveno), sizeof(otkriveno));
+    file.write(reinterpret_cast<const char*>(oznaceno), sizeof(oznaceno));
 
     file.close();
 
-    cout << "Game saved successfully." << endl;
+    cout << "Igra je uspjesno spremljena." << endl;
 }
 
-void loadGame(const string& filename)
+void ucitajIgru(const string& filename)
 {
     ifstream file(filename, ios::binary);
 
     if (!file)
     {
-        cout << "Failed to open file." << endl;
+        cout << "Nije moguce otvoriti datoteku." << endl;
         return;
     }
 
-    file.read(reinterpret_cast<char*>(&boardSize), sizeof(boardSize));
-    file.read(reinterpret_cast<char*>(board), sizeof(board));
-    file.read(reinterpret_cast<char*>(revealed), sizeof(revealed));
-    file.read(reinterpret_cast<char*>(flagged), sizeof(flagged));
+    file.read(reinterpret_cast<char*>(&velPloce), sizeof(velPloce));
+    file.read(reinterpret_cast<char*>(ploca), sizeof(ploca));
+    file.read(reinterpret_cast<char*>(otkriveno), sizeof(otkriveno));
+    file.read(reinterpret_cast<char*>(oznaceno), sizeof(oznaceno));
 
     file.close();
 
-    cout << "Game loaded successfully." << endl;
+    cout << "Igra je uspjesno ucitana." << endl;
 }
 
-void printMenu()
+void ispisiMeni()
 {
-    cout << "Menu:" << endl;
-    cout << "1. Reveal cell" << endl;
-    cout << "2. Flag cell" << endl;
-    cout << "3. Save game" << endl;
-    cout << "4. Load game" << endl;
-    cout << "5. Exit" << endl;
-    cout << "Enter your choice: ";
+    cout << "Meni:" << endl;
+    cout << "1. Otkrij polje" << endl;
+    cout << "2. Oznaci polje" << endl;
+    cout << "3. Spremi igru" << endl;
+    cout << "4. Ucitaj igru" << endl;
+    cout << "5. Izlaz" << endl;
+    cout << "Unesite svoj izbor: ";
 }
 
 int main()
 {
     srand(static_cast<unsigned int>(time(nullptr)));
 
-    cout << "Welcome to Minesweeper!" << endl;
+    cout << "Dobrodosli u BOMBOLOVAC!!!!" << endl;
 
     while (true)
     {
-        cout << "Menu:" << endl;
-        cout << "1. New Game" << endl;
-        cout << "2. Load Game" << endl;
-        cout << "3. Exit" << endl;
-        cout << "Enter your choice: ";
+        cout << "Meni:" << endl;
+        cout << "1. Nova igra" << endl;
+        cout << "2. Ucitaj igru" << endl;
+        cout << "3. Izlaz" << endl;
+        cout << "Unesite svoj izbor: ";
 
-        int choice;
-        cin >> choice;
+        int izbor1;
+        cin >> izbor1;
 
-        if (choice == 1)
+        if (izbor1 == 1)
         {
-            string playerName;
-            cout << "Enter your name: ";
+            string imeIgraca;
+            cout << "Unesite ime igraca: ";
             cin.ignore();
-            getline(cin, playerName);
-            ofstream playerNameFile("player_name.txt");
-            if (playerNameFile.is_open())
+            getline(cin, imeIgraca);
+            ofstream imeIgracaFile("ime_igraca.txt");
+            if (imeIgracaFile.is_open())
             {
-                playerNameFile << playerName;
-                playerNameFile.close();
-                cout << "Player name saved successfully." << endl;
+                imeIgracaFile << imeIgraca;
+                imeIgracaFile.close();
+                cout << "Ime igraca je uspjesno spremljeno." << endl;
             }
             else
             {
-                cout << "Failed to open player name file." << endl;
+                cout << "Nije moguce otvoriti datoteku." << endl;
             }
 
-            cout << "Enter the board size (4 - 10): ";
-            cin >> boardSize;
+            cout << "Unesite velicinu ploce (4 - 10): ";
+            cin >> velPloce;
 
-            if (boardSize < 4 || boardSize > 10)
+            if (velPloce < 4 || velPloce > 10)
             {
-                cout << "Invalid board size. Setting board size to 10." << endl;
-                boardSize = 10;
+                cout << "Neispravan unos. Postavljanje velicine ploce na 5." << endl;
+                velPloce = 5;
             }
 
-            cout << "Enter the number of mines: ";
-            cin >> numMines;
+            cout << "Unesite broj bombi: ";
+            cin >> brojBombi;
 
-            initializeBoard();
-            placeMines(numMines);
+            inicijalizacijaPloce();
+            postaviBombe(brojBombi);
 
-            cout << "New game started. Good luck, " << playerName << "!" << endl;
+            cout << "Nova igra je pokrenuta. Sretno, " << imeIgraca << "!" << endl;
         }
-        else if (choice == 2)
+        else if (izbor1 == 2)
         {
-            string saveFile;
-            cout << "Enter the filename to load: ";
-            cin >> saveFile;
-            loadGame(saveFile);
+            string spremiFile;
+            cout << "Unesite ime datoteke koju zelite ucitati: ";
+            cin >> spremiFile;
+            ucitajIgru(spremiFile);
         }
-        else if (choice == 3)
+        else if (izbor1 == 3)
         {
-            cout << "Goodbye!" << endl;
+            cout << "Dovidjenja!" << endl;
             break;
         }
         else
         {
-            cout << "Invalid choice. Please try again." << endl;
+            cout << "Neispravan unos. Molimo pokusajte ponovo." << endl;
         }
 
-        while (!isGameOver())
+        while (!jeIgraGotova())
         {
-            displayBoard();
-            printMenu();
+            prikaziPlocu();
+            ispisiMeni();
 
-            cin >> choice;
+            cin >> izbor1;
 
-            if (choice == 1)
+            if (izbor1 == 1)
             {
                 int x, y;
-                cout << "Enter the coordinates (x, y): ";
+                cout << "Unesite koordinate (x, y): ";
                 cin >> x >> y;
-                revealCell(x, y);
+                otkrijPolje(x, y);
             }
-            else if (choice == 2)
+            else if (izbor1 == 2)
             {
                 int x, y;
-                cout << "Enter the coordinates (x, y): ";
+                cout << "Unesite koordinate (x, y): ";
                 cin >> x >> y;
-                flagCell(x, y);
+                oznaciPolje(x, y);
             }
-            else if (choice == 3)
+            else if (izbor1 == 3)
             {
-                string saveFile;
-                cout << "Enter the filename to save: ";
-                cin >> saveFile;
-                saveGame(saveFile);
+                string spremiFile;
+                cout << "Unesite ime datoteke koju zelite spremiti: ";
+                cin >> spremiFile;
+                spremiIgru(spremiFile);
             }
-            else if (choice == 4)
+            else if (izbor1 == 4)
             {
-                string loadFile;
-                cout << "Enter the filename to load: ";
-                cin >> loadFile;
-                loadGame(loadFile);
+                string ucitajFile;
+                cout << "Unesite ime datoteke koju zelite ucitati: ";
+                cin >> ucitajFile;
+                ucitajIgru(ucitajFile);
             }
-            else if (choice == 5)
+            else if (izbor1 == 5)
             {
-                cout << "Exiting the game..." << endl;
+                cout << "Izlaz iz igre..." << endl;
                 break;
             }
             else
             {
-                cout << "Invalid choice. Please try again." << endl;
+                cout << "Neispravan unos. Molimo pokusajte ponovo." << endl;
             }
         }
 
-        if (isGameOver())
+        if (jeIgraGotova())
         {
-            cout << "Game over! You won!" << endl;
+            cout << "Pobijedili ste! Igra je zavrsena!" << endl;
+
+            if (igrajPonovo())
+            {
+                inicijalizacijaPloce();
+                postaviBombe(brojBombi);
+                continue;
+            }
+            else
+            {
+                break;
+            }
+        }
+
+        if (!igrajPonovo())
+        {
+            cout << "Izlaz iz igre..." << endl;
+            break;
         }
     }
 
